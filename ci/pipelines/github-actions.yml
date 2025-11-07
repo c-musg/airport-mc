@@ -1,0 +1,49 @@
+name: terraform
+
+on:
+  pull_request:
+    paths:
+      - "modules/**"
+      - "stacks/**"
+      - "envs/**"
+      - ".pre-commit-config.yaml"
+      - "tflint.hcl"
+      - "policies/**"
+  push:
+    branches:
+      - main
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    env:
+      TF_STACK: ${{ matrix.stack }}
+      TF_ENV: ${{ matrix.environment }}
+    strategy:
+      matrix:
+        environment: [dev]
+        stack:
+          - stacks/airport-ingestion/aws
+          - stacks/airport-ingestion/gcp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Install dependencies
+        run: |
+          pip install checkov
+          curl -s https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | bash
+
+      - name: Pre-commit validation
+        run: |
+          pip install pre-commit
+          pre-commit run --all-files
+
+      - name: Terraform plan
+        run: |
+          make plan TF_STACK=$TF_STACK TF_ENV=$TF_ENV

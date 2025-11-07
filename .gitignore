@@ -1,1 +1,7 @@
-.terraform/\n*.tfstate*\n**/.DS_Store
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+ci/reports/
+**/.DS_Store
+.grok/
